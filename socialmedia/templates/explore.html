@@ -14,6 +14,14 @@
     <title>Explore</title>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <style>
+        body {
+            background-image: url("{% static 'explore-bg.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            font-family: 'Quicksand', sans-serif;
+        }
+
         /* Custom styles for the sidebar */
         * {
             box-sizing: border-box;
@@ -25,6 +33,7 @@
             background-color: #f8f9fa;
             height: 100vh;
             color: black;
+            border-right: 1px solid #ddd;
         }
 
         .profile-pic {
@@ -35,17 +44,42 @@
         }
 
         a {
-            color: black;
+            color: #000;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a:hover {
+            color: #007bff;
+        }
+
+        /* Style for the post cards */
+        .post-card {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .post-img {
+            width: 100%;
+            height: 213px;
+            object-fit: cover;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .post-details {
+            padding: 15px;
         }
 
         .image_s {
             position: relative;
-            width: 213px;
-        }
-
-        .image__img {
-            display: block;
-            width: 100%;
         }
 
         .image__overlay {
@@ -54,61 +88,49 @@
             left: 0;
             width: 100%;
             height: 100%;
-
-            color: #000000;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
             font-family: 'Quicksand', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             opacity: 0;
-            transition: opacity 0.25s;
+            transition: opacity 0.25s ease-in-out;
         }
 
-
-
-
-
-        .image__overlay>* {
-            transform: translateY(20px);
-            transition: transform 0.25s;
-        }
-
-        .image__overlay:hover {
+        .image_s:hover .image__overlay {
             opacity: 1;
         }
 
-        .image__overlay:hover>* {
-            transform: translateY(0);
-        }
-
-        .image_s:hover .image__img  {
-            opacity: 0.1;
-        
-        }
-
         .image__title {
-            font-size: 2em;
+            font-size: 1.5rem;
             font-weight: bold;
         }
 
         .image__description {
-            font-size: 1.25em;
-            margin-top: 0.25em;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        .container {
+            margin-top: 20px;
         }
     </style>
 </head>
 
 <body>
 
-    {% load static %}
-
     <div class="container-fluid">
         <div class="row">
-            <nav class="col-md-2 d-none d-md-block sidebar" style="position: fixed;">
+            <nav class="col-md-2 d-none d-md-block sidebar">
                 <div class="text-center mt-3">
                     <img src="{{profile.profileimg.url}}" alt="Profile Picture" class="profile-pic">
-                    <h4 class="mt-2"><a href="/profile/{{user}}" style="text-decoration:none;">@{{user}}</a></h4>
+                    <h4 class="mt-2"><a href="/profile/{{user}}">@{{user}}</a></h4>
                 </div>
                 <ul class="nav flex-column mt-4">
                     <li class="nav-item">
@@ -126,14 +148,11 @@
                             <i class="fa-solid fa-magnifying-glass mr-1"></i> Search
                         </a>
                     </li>
-                    
                     <li class="nav-item">
                         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#exampleModal"
                             data-bs-whatever="@getbootstrap">
                             <i class="fa-solid fa-circle-plus mr-1"></i> Create Post
                         </a>
-
-
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/profile/{{profile.user}}">
@@ -149,26 +168,22 @@
             </nav>
 
             <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
-
                 {% include "modal.html" %}
                 {% include "search.html" %}
 
-
-                <div class="container text-center" style="padding: 10px; margin-top:20px;">
-                    <div class="row row-cols-3">
+                <div class="container">
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
                         {% for pos in post %}
-                        <div class="col m-2 image_s" style="margin-bottom:10px;">
-                            <img class="image__img" src="{{pos.image.url}}" alt="Post Image"
-                                style="max-width: 213px; max-height:213px">
-                            <div class="image__overlay image__overlay--primary">
-                                <div class="image__title"><a href="/profile/{{pos.user}}">@{{pos.user}}</a></div>
-                                <p class="image__description">
-                                    {{pos.caption}}
-                                </p>
+                        <div class="col">
+                            <div class="post-card">
+                                <img src="{{pos.image.url}}" alt="Post Image" class="post-img">
+                                <div class="post-details text-center">
+                                    <h5><a href="/profile/{{pos.user}}">@{{pos.user}}</a></h5>
+                                    <p>{{pos.caption}}</p>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
-
                     </div>
                 </div>
             </main>
