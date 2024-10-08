@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from . models import  Followers, LikePost, Post, Profile
 from django.db.models import Q
 
+from django.contrib.auth.models import User
 
 def signup(request):
     try:
@@ -16,41 +17,48 @@ def signup(request):
             pwd = request.POST.get('pwd')  # Mật khẩu được nhập từ người dùng
             print(fnm, emailid, pwd)
 
-            # Tạo người dùng mà không mã hóa mật khẩu
-            my_user = User.objects.create(username=fnm, email=emailid, password=pwd)
+            # Kiểm tra xem tài khoản đã tồn tại hay chưa
+            if User.objects.filter(username=fnm).exists():
+                invalid = "Tài khoản đã tồn tại."
+                return render(request, 'signup.html', {'invalid': invalid})
+
+            # Tạo người dùng
+            my_user = User.objects.create(username=fnm, email=emailid)
+            my_user.set_password(pwd)
             my_user.save()
 
             user_model = User.objects.get(username=fnm)
             new_profile = Profile.objects.create(user=user_model, id_user=user_model.id)
             new_profile.save()
 
-            if my_user is not None:
-                login(request, my_user)
-                return redirect('/')
-            return redirect('/loginn')
+            # Đăng nhập người dùng ngay sau khi đăng ký
+            login(request, my_user)
+            return redirect('/')
 
     except Exception as e:
-        invalid = "User already exists"
+        invalid = "Có lỗi xảy ra."
         print(e)  # In ra lỗi nếu có
         return render(request, 'signup.html', {'invalid': invalid})
 
     return render(request, 'signup.html')
 
-
 def loginn(request):
- 
-  if request.method == 'POST':
-        fnm=request.POST.get('fnm')
-        pwd=request.POST.get('pwd')
-        print(fnm,pwd)
-        userr=authenticate(request,username=fnm,password=pwd)
+    if request.method == 'POST':
+        fnm = request.POST.get('fnm')
+        pwd = request.POST.get('pwd')
+        print(fnm, pwd)
+        userr = authenticate(request, username=fnm, password=pwd)
+
         if userr is not None:
-            login(request,userr)
+            login(request, userr)
             return redirect('/')
-        invalid="Invalid Credentials"
-        return render(request, 'loginn.html',{'invalid':invalid})
-               
-  return render(request, 'loginn.html')
+        else:
+            print("Authentication failed")  # Thêm dòng này để kiểm tra
+            invalid = "Invalid Credentials"
+            return render(request, 'loginn.html', {'invalid': invalid})
+
+    return render(request, 'loginn.html')
+
 
 @login_required(login_url='/loginn')
 def logoutt(request):
