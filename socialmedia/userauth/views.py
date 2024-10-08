@@ -8,39 +8,34 @@ from . models import  Followers, LikePost, Post, Profile
 from django.db.models import Q
 
 
-
-
 def signup(request):
- try:
-    if request.method == 'POST':
-        fnm=request.POST.get('fnm')
-        emailid=request.POST.get('emailid')
-        pwd=request.POST.get('pwd')
-        print(fnm,emailid,pwd)
-        my_user=User.objects.create_user(fnm,emailid,pwd)
-        my_user.save()
-        user_model = User.objects.get(username=fnm)
-        new_profile = Profile.objects.create(user=user_model, id_user=user_model.id)
-        new_profile.save()
-        if my_user is not None:
-            login(request,my_user)
-            return redirect('/')
-        return redirect('/loginn')
-    
-        
- except:
-        invalid="User already exists"
-        return render(request, 'signup.html',{'invalid':invalid})
-  
-    
- return render(request, 'signup.html')
-        
-     
-        
-        
-        
-        
-    
+    try:
+        if request.method == 'POST':
+            fnm = request.POST.get('fnm')
+            emailid = request.POST.get('emailid')
+            pwd = request.POST.get('pwd')  # Mật khẩu được nhập từ người dùng
+            print(fnm, emailid, pwd)
+
+            # Tạo người dùng mà không mã hóa mật khẩu
+            my_user = User.objects.create(username=fnm, email=emailid, password=pwd)
+            my_user.save()
+
+            user_model = User.objects.get(username=fnm)
+            new_profile = Profile.objects.create(user=user_model, id_user=user_model.id)
+            new_profile.save()
+
+            if my_user is not None:
+                login(request, my_user)
+                return redirect('/')
+            return redirect('/loginn')
+
+    except Exception as e:
+        invalid = "User already exists"
+        print(e)  # In ra lỗi nếu có
+        return render(request, 'signup.html', {'invalid': invalid})
+
+    return render(request, 'signup.html')
+
 
 def loginn(request):
  
@@ -52,8 +47,6 @@ def loginn(request):
         if userr is not None:
             login(request,userr)
             return redirect('/')
-        
- 
         invalid="Invalid Credentials"
         return render(request, 'loginn.html',{'invalid':invalid})
                
