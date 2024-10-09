@@ -15,43 +15,90 @@
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <style>
         /* Custom styles for the sidebar */
-        .sidebar {
-            background-color: #f8f9fa;
-            height: 100vh;
-            color: black;
-        }
+      /* General styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #FFF0F5;
+    color: #333;
+}
 
-        .profile-pic {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
+/* Profile picture styling */
+.profile-pic {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
 
-        a {
-            color: black;
-        }
+.profile-pic:hover {
+    transform: scale(1.05);
+}
 
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-        }
+/* Button styling */
+button {
+    background-color: #007bff;
+    color: white;
+    border-radius: 25px;
+    padding: 10px 20px;
+    transition: background-color 0.3s ease;
+}
 
-        .image-item {
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
+button:hover {
+    background-color: #0056b3;
+}
 
-        .image-item:hover {
-            border: 1px solid #777;
+/* Grid layout for images */
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
 
-        }
+.image-item {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 10px;
+    transition: box-shadow 0.3s ease;
+}
 
-        .image-item img {
-            max-width: 100%;
-            height: auto;
-        }
+.image-item:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Card styling */
+.card {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.card img {
+    border-radius: 15px;
+    object-fit: cover;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: #343a40;
+    height: 100vh;
+    padding-top: 20px;
+}
+
+.sidebar a {
+    color: white;
+    font-weight: bold;
+}
+
+.sidebar a:hover {
+    color: #007bff;
+}
+
     </style>
 </head>
 
