@@ -74,18 +74,15 @@ WSGI_APPLICATION = 'socialmedia.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 DATABASES = {
-    "default": {
-        "ENGINE": "mssql",
-        "NAME": "mxh",
-        "USER": "sa",
-        "PASSWORD": "12345678",
-        "HOST": "localhost",
-        "PORT": "1433",
-        "OPTIONS": {"driver": "ODBC Driver 17 for SQL Server",
-        },
-    },
+'default': {
+'ENGINE': 'django.db.backends.mysql',
+'NAME': 'mxh',
+'USER': 'root',
+'PASSWORD': '12345678',
+'HOST':'localhost',
+'PORT':'3306',
+}
 }
 
 # Password validation
