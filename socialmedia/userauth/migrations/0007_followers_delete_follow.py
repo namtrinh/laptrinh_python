@@ -2,6 +2,8 @@
 
 from django.db import migrations, models
 
+from socialmedia import settings
+
 
 class Migration(migrations.Migration):
 

@@ -1,39 +1,62 @@
+import uuid
 from itertools import chain
+from django.core.cache import cache
+from django.core.mail import send_mail
 from  django . shortcuts  import  get_object_or_404, render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from . models import  Followers, LikePost, Post, Profile
+from django.urls import reverse
+
+from .models import Followers, LikePost, Post, Profile, CustomUser
 from django.db.models import Q
 
 from django.contrib.auth.models import User
+
 
 def signup(request):
     try:
         if request.method == 'POST':
             fnm = request.POST.get('fnm')
             emailid = request.POST.get('emailid')
-            pwd = request.POST.get('pwd')  # Mật khẩu được nhập từ người dùng
-            print(fnm, emailid, pwd)
+            pwd = request.POST.get('pwd')
 
             # Kiểm tra xem tài khoản đã tồn tại hay chưa
-            if User.objects.filter(username=fnm).exists():
+            if CustomUser.objects.filter(email=emailid).exists():
                 invalid = "Tài khoản đã tồn tại."
                 return render(request, 'signup.html', {'invalid': invalid})
 
-            # Tạo người dùng
-            my_user = User.objects.create(username=fnm, email=emailid)
-            my_user.set_password(pwd)
-            my_user.save()
+            # Tạo token xác minh
+            activation_token = str(uuid.uuid4())
 
-            user_model = User.objects.get(username=fnm)
-            new_profile = Profile.objects.create(user=user_model, id_user=user_model.id)
-            new_profile.save()
+            # Kiểm tra số lần gửi email cho tài khoản này
+            email_send_count_key = f"email_send_count_{emailid}"
+            email_send_count = cache.get(email_send_count_key, 0)
 
-            # Đăng nhập người dùng ngay sau khi đăng ký
-            login(request, my_user)
-            return redirect('/')
+            if email_send_count >= 7:
+                invalid = "Bạn đã gửi yêu cầu xác thực quá số lần cho phép trong 10 phút."
+                return render(request, 'signup.html', {'invalid': invalid})
+
+            # Lưu thông tin tài khoản vào cache với thời gian timeout là 2 phút cho token
+            cache.set(activation_token, {'fnm': fnm, 'emailid': emailid, 'pwd': pwd}, timeout=120)
+
+            # Cập nhật bộ đếm số lần gửi email cho tài khoản trong 10 phút
+            cache.set(email_send_count_key, email_send_count + 1, timeout=600)
+
+            # Tạo đường dẫn xác minh
+            activation_link = request.build_absolute_uri(reverse('activate', args=[activation_token]))
+
+            # Gửi email xác thực
+            send_mail(
+                'Xác thực tài khoản của bạn',
+                f'Nhấn vào link sau để kích hoạt tài khoản của bạn: {activation_link}',
+                'Firefly-Media',
+                [emailid],
+                fail_silently=False,
+            )
+
+            return render(request, 'signup.html', {'message': "Một email xác thực đã được gửi đến bạn."})
 
     except Exception as e:
         invalid = "Có lỗi xảy ra."
@@ -42,12 +65,34 @@ def signup(request):
 
     return render(request, 'signup.html')
 
+
+def activate_account(request, token):
+    # Lấy thông tin tài khoản từ cache
+    account_data = cache.get(token)
+
+    if account_data:
+        fnm = account_data['fnm']
+        emailid = account_data['emailid']
+        pwd = account_data['pwd']
+
+        my_user = CustomUser(email=emailid, username=fnm)
+        my_user.set_password(pwd)
+        my_user.save()
+
+        # Tạo hồ sơ người dùng và đánh dấu là đã kích hoạt
+        new_profile = Profile.objects.create(user=my_user, activation_token=token, is_active=True)
+        new_profile.save()
+        cache.delete(token)
+
+        return render(request, 'activation_success.html')  # Giao diện thông báo kích hoạt thành công
+    else:
+        return render(request, 'activation_error.html', {'message': "Liên kết xác thực không hợp lệ hoặc đã hết hạn."})
 def loginn(request):
     if request.method == 'POST':
-        fnm = request.POST.get('fnm')
+        emailid = request.POST.get('emailid')
         pwd = request.POST.get('pwd')
-        print(fnm, pwd)
-        userr = authenticate(request, username=fnm, password=pwd)
+        print(emailid, pwd)
+        userr = authenticate(request, email=emailid, password=pwd)  # Thay đổi đây
 
         if userr is not None:
             login(request, userr)
@@ -69,10 +114,10 @@ def logoutt(request):
 
 @login_required(login_url='/loginn')
 def home(request):
-    
+
     following_users = Followers.objects.filter(follower=request.user.username).values_list('user', flat=True)
 
-    
+
     post = Post.objects.filter(Q(user=request.user.username) | Q(user__in=following_users)).order_by('-created_at')
 
     profile = Profile.objects.get(user=request.user)
@@ -82,7 +127,7 @@ def home(request):
         'profile': profile,
     }
     return render(request, 'main.html',context)
-    
+
 
 
 @login_required(login_url='/loginn')
@@ -122,7 +167,7 @@ def likes(request, id):
 
         # Redirect back to the post's detail page
         return redirect('/#'+id)
-    
+
 @login_required(login_url='/loginn')
 def explore(request):
     post=Post.objects.all().order_by('-created_at')
@@ -131,13 +176,13 @@ def explore(request):
     context={
         'post':post,
         'profile':profile
-        
+
     }
     return render(request, 'explore.html',context)
-    
+
 @login_required(login_url='/loginn')
 def profile(request,id_user):
-    user_object = User.objects.get(username=id_user)
+    user_object = CustomUser.objects.get(username=id_user)
     print(user_object)
     profile = Profile.objects.get(user=request.user)
     user_profile = Profile.objects.get(user=user_object)
@@ -146,7 +191,7 @@ def profile(request,id_user):
 
     follower = request.user.username
     user = id_user
-    
+
     if Followers.objects.filter(follower=follower, user=user).first():
         follow_unfollow = 'Unfollow'
     else:
@@ -165,8 +210,8 @@ def profile(request,id_user):
         'user_followers': user_followers,
         'user_following': user_following,
     }
-    
-    
+
+
     if request.user.username == id_user:
         if request.method == 'POST':
             if request.FILES.get('image') == None:
@@ -187,7 +232,7 @@ def profile(request,id_user):
              user_profile.bio = bio
              user_profile.location = location
              user_profile.save()
-            
+
 
             return redirect('/profile/'+id_user)
         else:

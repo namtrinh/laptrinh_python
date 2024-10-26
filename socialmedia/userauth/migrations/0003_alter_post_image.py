@@ -2,11 +2,14 @@
 
 from django.db import migrations, models
 
+from socialmedia import settings
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ('userauth', '0002_alter_post_image'),
+
     ]
 
     operations = [
