@@ -24,7 +24,11 @@ def signup(request):
 
             # Kiểm tra xem tài khoản đã tồn tại hay chưa
             if CustomUser.objects.filter(email=emailid).exists():
-                invalid = "Tài khoản đã tồn tại."
+                invalid = "email đã tồn tại."
+                return render(request, 'signup.html', {'invalid': invalid})
+
+            if CustomUser.objects.filter(username=fnm).exists():
+                invalid = "Username đã tồn tại."
                 return render(request, 'signup.html', {'invalid': invalid})
 
             # Tạo token xác minh
